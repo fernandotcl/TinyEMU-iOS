@@ -1,0 +1,43 @@
+name: TinyEMU-iOS
+options:
+  bundleIdPrefix: com.fernandotcl
+  deploymentTarget:
+    - iOS: 11.0
+  usesTabs: false
+  identWidth: 4
+  tabWidth: 4
+targets:
+  TinyEMU-iOS:
+    type: application
+    platform: iOS
+    info:
+      path: Info.plist
+    settings:
+      SWIFT_OBJC_BRIDGING_HEADER: Sources/BridgingHeader.h
+    sources:
+      - Sources
+    dependencies:
+      - target: TinyEMU
+  TinyEMU:
+    productName: libTinyEMU
+    type: library.static
+    platform: iOS
+    postCompileScripts:
+      - inputFiles:
+        - $(SRCROOT)/**/*.{c,h}
+        - $(SRCROOT)/Makefile
+        outputFiles:
+          - $(BUILT_PRODUCTS_DIR)/libtemu.a
+        script: |
+                set -e
+                cd "${SRCROOT}"/Vendors/TinyEMU
+                make clean
+                if test "x${PLATFORM_NAME}" = iphoneos; then
+                  make CONFIG_IOS=y CONFIG_FS_NET= CONFIG_SDL= CONFIG_X86EMU=
+                else
+                  make CONFIG_IOS_SIMULATOR=y CONFIG_FS_NET= CONFIG_SDL= CONFIG_X86EMU=
+                fi
+                mkdir -p "${BUILT_PRODUCTS_DIR}"/
+                mv libtemu.a "${BUILT_PRODUCTS_DIR}/libTinyEMU.a"
+                make clean
+    requiresObjCLinking: true

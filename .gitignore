@@ -1,0 +1,6 @@
+# Build products
+*.xcodeproj
+Info.plist
+
+# macOS-specific
+.DS_Store

@@ -1,0 +1,3 @@
+[submodule "TinyEMU"]
+	path = Vendors/TinyEMU
+	url = https://github.com/fernandotcl/TinyEMU
