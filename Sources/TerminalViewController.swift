@@ -25,17 +25,34 @@ class TerminalViewController: UIViewController {
     private var webViewDidLoad = false
     private var webViewQueueBeforeLoad = Data()
 
+    private var keyboardInset: CGFloat = 0
+
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+
+        NotificationCenter.default
+            .addObserver(self,
+                         selector: #selector(keyboardWillChangeFrame),
+                         name: UIApplication.keyboardWillChangeFrameNotification,
+                         object: nil)
+    }
+
+    required init?(coder aDecoder: NSCoder) { fatalError() }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
         view.backgroundColor = .black
 
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(becomeFirstResponder))
-        view.addGestureRecognizer(tapGestureRecognizer)
+        view.addGestureRecognizer(
+            UITapGestureRecognizer(target: self,
+                                   action: #selector(becomeFirstResponder)))
 
         webView = WKWebView(frame: view.bounds)
         webView.isUserInteractionEnabled = false
         webView.isOpaque = false
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.navigationDelegate = self
         view.addSubview(webView)
 
@@ -47,22 +64,32 @@ class TerminalViewController: UIViewController {
     <meta name="viewport" content="height=device-height, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
     <link rel="stylesheet" href="xterm.css" />
     <style type="text/css">
+
+body { margin: 0; }
 #terminal textarea { display: none; }
+
     </style>
     <script src="xterm.js"></script>
-    <script src="xterm-fit.js"></script>
   </head>
   <body>
     <div id="terminal"></div>
   </body>
   <script>
-Terminal.applyAddon(fit);
+
+function refit(width, height) {
+    var cellWidth = terminal._core.renderer.dimensions.actualCellWidth
+    var cellHeight = terminal._core.renderer.dimensions.actualCellHeight
+    terminal.resize(Math.floor(width / cellWidth),
+                    Math.floor(height / cellHeight))
+    terminal.scrollToBottom()
+}
+
 var terminal = new Terminal({
     rendererType: 'dom',
-    fontFamily: 'monaco',
+    fontFamily: 'monaco'
 });
 terminal.open(document.getElementById('terminal'));
-terminal.fit();
+
   </script>
 </html>
 """
@@ -78,10 +105,44 @@ terminal.fit();
         super.viewDidLayoutSubviews()
 
         let oldSize = webView.frame.size
-        webView.frame = view.bounds
+        let safeAreaInsets = view.safeAreaInsets
 
-        if webView.frame.size != oldSize {
-            webView.evaluateJavaScript("terminal.fit();", completionHandler: nil)
+        // Add a bit of margin if there's a 20pt status bar
+        let topMargin = safeAreaInsets.top == 20 ? 25 : safeAreaInsets.top
+
+        // Take safe area insets, margin and keyboard inset into account
+        var frame = view.bounds
+        frame.origin.x += safeAreaInsets.left
+        frame.origin.y += topMargin
+        frame.size.width -= safeAreaInsets.left + safeAreaInsets.right
+        frame.size.height -= topMargin
+        frame.size.height -= max(keyboardInset, safeAreaInsets.bottom)
+        webView.frame = frame
+
+        if frame.size != oldSize && webViewDidLoad {
+            refitTerminal()
+        }
+    }
+
+    override func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+        view.setNeedsLayout()
+    }
+
+    private func refitTerminal() {
+        let size = webView.frame.size
+        let javascript = "refit(\(size.width), \(size.height));"
+        webView.evaluateJavaScript(javascript, completionHandler: nil)
+    }
+
+    @objc private func keyboardWillChangeFrame(_ notification: Notification) {
+        let frameKey = UIApplication.keyboardFrameEndUserInfoKey
+        if let frame = (notification.userInfo?[frameKey] as? NSValue)?.cgRectValue,
+            frame.height != keyboardInset {
+            keyboardInset = frame.height
+            if isViewLoaded {
+                view.setNeedsLayout()
+            }
         }
     }
 
@@ -92,6 +153,9 @@ terminal.fit();
     override var canBecomeFirstResponder: Bool {
         return true
     }
+}
+
+extension TerminalViewController: WKNavigationDelegate {
 
     func write(_ data: Data) {
         guard webViewDidLoad else {
@@ -109,11 +173,10 @@ terminal.fit();
             write(data)
         }
     }
-}
-
-extension TerminalViewController: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        refitTerminal()
+
         webViewDidLoad = true
         if !webViewQueueBeforeLoad.isEmpty {
             write(webViewQueueBeforeLoad)
