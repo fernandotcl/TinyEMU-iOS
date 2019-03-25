@@ -69,7 +69,12 @@ terminal.fit();
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
+        let oldSize = webView.frame.size
         webView.frame = view.bounds
+
+        if webView.frame.size != oldSize {
+            webView.evaluateJavaScript("terminal.fit();", completionHandler: nil)
+        }
     }
 
     override var preferredStatusBarStyle: UIStatusBarStyle {
