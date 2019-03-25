@@ -200,6 +200,49 @@ extension TerminalViewController: UIKeyInput {
     }
 }
 
+extension TerminalViewController {
+
+    override var keyCommands: [UIKeyCommand] {
+        return [
+            UIKeyCommand(input: UIKeyCommand.inputUpArrow,
+                         modifierFlags: [],
+                         action: #selector(keyCommandArrowUp)),
+            UIKeyCommand(input: UIKeyCommand.inputDownArrow,
+                         modifierFlags: [],
+                         action: #selector(keyCommandArrowDown)),
+            UIKeyCommand(input: UIKeyCommand.inputLeftArrow,
+                         modifierFlags: [],
+                         action: #selector(keyCommandArrowLeft)),
+            UIKeyCommand(input: UIKeyCommand.inputRightArrow,
+                         modifierFlags: [],
+                         action: #selector(keyCommandArrowRight)),
+            UIKeyCommand(input: UIKeyCommand.inputEscape,
+                         modifierFlags: [],
+                         action: #selector(keyCommandEscape))
+        ]
+    }
+
+    @objc private func keyCommandArrowUp() {
+        delegate?.terminalViewController(self, write: "\u{1b}[A")
+    }
+
+    @objc private func keyCommandArrowDown() {
+        delegate?.terminalViewController(self, write: "\u{1b}[B")
+    }
+
+    @objc private func keyCommandArrowLeft() {
+        delegate?.terminalViewController(self, write: "\u{1b}[D")
+    }
+
+    @objc private func keyCommandArrowRight() {
+        delegate?.terminalViewController(self, write: "\u{1b}[C")
+    }
+
+    @objc private func keyCommandEscape() {
+        delegate?.terminalViewController(self, write: "\u{1b}")
+    }
+}
+
 protocol TerminalViewControllerDelegate: AnyObject {
 
     func terminalViewController(_ viewController: TerminalViewController, write text: String)
