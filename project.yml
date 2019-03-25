@@ -66,4 +66,7 @@ targets:
                 set -e
                 npm install xterm
                 mkdir -p "${BUILT_PRODUCTS_DIR}"/Xterm.js.bundle
-                cp node_modules/xterm/dist/xterm.{js,css} "${BUILT_PRODUCTS_DIR}/Xterm.js.bundle"
+                cp node_modules/xterm/dist/xterm.{js,css} \
+                  "${BUILT_PRODUCTS_DIR}/Xterm.js.bundle"
+                cp node_modules/xterm/dist/addons/fit/fit.js \
+                  "${BUILT_PRODUCTS_DIR}/Xterm.js.bundle/xterm-fit.js"

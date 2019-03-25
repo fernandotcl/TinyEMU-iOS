@@ -21,7 +21,10 @@ class TerminalViewController: UIViewController, WKNavigationDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        view.backgroundColor = .black
+
         webView = WKWebView(frame: view.bounds)
+        webView.isOpaque = false
         webView.navigationDelegate = self
         view.addSubview(webView)
 
@@ -36,13 +39,16 @@ class TerminalViewController: UIViewController, WKNavigationDelegate {
 #terminal textarea { display: none; }
     </style>
     <script src="xterm.js"></script>
+    <script src="xterm-fit.js"></script>
   </head>
   <body>
     <div id="terminal"></div>
   </body>
   <script>
+Terminal.applyAddon(fit);
 var terminal = new Terminal();
 terminal.open(document.getElementById('terminal'));
+terminal.fit()
   </script>
 </html>
 """
@@ -56,6 +62,18 @@ terminal.open(document.getElementById('terminal'));
         webView.frame = view.bounds
     }
 
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        webViewDidLoad = true
+        if !webViewQueueBeforeLoad.isEmpty {
+            write(data: webViewQueueBeforeLoad)
+            webViewQueueBeforeLoad = Data()
+        }
+    }
+
     func write(data: Data) {
         guard webViewDidLoad else {
             webViewQueueBeforeLoad.append(data)
@@ -65,13 +83,5 @@ terminal.open(document.getElementById('terminal'));
         let encoded = data.base64EncodedString()
         let javascript = "terminal.write(window.atob('\(encoded)'));"
         webView.evaluateJavaScript(javascript, completionHandler: nil)
-    }
-
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        webViewDidLoad = true
-        if !webViewQueueBeforeLoad.isEmpty {
-            write(data: webViewQueueBeforeLoad)
-            webViewQueueBeforeLoad = Data()
-        }
     }
 }
