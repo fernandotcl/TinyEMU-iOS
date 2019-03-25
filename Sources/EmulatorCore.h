@@ -23,6 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)start;
 
+- (void)writeData:(NSData *)data;
+
 @end
 
 

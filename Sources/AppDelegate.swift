@@ -11,7 +11,7 @@ import UIKit
 
 
 @UIApplicationMain
-class AppDelegate: NSObject, UIApplicationDelegate, EmulatorCoreDelegate {
+class AppDelegate: NSObject {
 
     private var window: UIWindow?
     private var terminalViewController: TerminalViewController!
@@ -21,20 +21,36 @@ class AppDelegate: NSObject, UIApplicationDelegate, EmulatorCoreDelegate {
         emulatorCore = EmulatorCore(configPath: "/Users/fernando/Desktop/TinyEMU/temu.cfg")
         super.init()
     }
+}
+
+extension AppDelegate: UIApplicationDelegate {
 
     func applicationDidFinishLaunching(_ application: UIApplication) {
         let window = UIWindow(frame: UIScreen.main.bounds)
         self.window = window
 
         terminalViewController = TerminalViewController()
+        terminalViewController.delegate = self
         window.rootViewController = terminalViewController
         window.makeKeyAndVisible()
 
         emulatorCore.delegate = self
         emulatorCore.start()
     }
+}
+
+extension AppDelegate: EmulatorCoreDelegate {
 
     func emulatorCore(_ core: EmulatorCore, didReceiveOutput data: Data) {
-        terminalViewController.write(data: data)
+        terminalViewController.write(data)
+    }
+}
+
+extension AppDelegate: TerminalViewControllerDelegate {
+
+    func terminalViewController(_ viewController: TerminalViewController, write text: String) {
+        if let data = text.data(using: .utf8) {
+            emulatorCore.write(data)
+        }
     }
 }

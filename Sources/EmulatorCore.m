@@ -18,6 +18,7 @@ int temu_main(int argc, const char **argv);
 @interface EmulatorCore ()
 
 @property (nonatomic, copy) NSString *configPath;
+@property (nonatomic) int inputDescriptor;
 @property (nonatomic) dispatch_source_t outputSource;
 
 @end
@@ -46,6 +47,7 @@ int temu_main(int argc, const char **argv);
     if (dup2(fds[0], STDIN_FILENO) != STDIN_FILENO) {
         [NSException raise:NSInternalInconsistencyException format:@"dup2() failed"];
     }
+    self.inputDescriptor = fds[1];
 
     // Replace stdout with a pipe
     if (pipe(fds) == -1) {
@@ -94,6 +96,14 @@ int temu_main(int argc, const char **argv);
         argv[1] = configPathCopy.UTF8String;
         temu_main(2, &argv[0]);
     });
+}
+
+- (void)writeData:(NSData *)data
+{
+    ssize_t len = write(self.inputDescriptor, data.bytes, data.length);
+    if (len != data.length) {
+        [NSException raise:NSInternalInconsistencyException format:@"write() failed"];
+    }
 }
 
 @end

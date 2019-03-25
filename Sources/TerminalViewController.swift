@@ -11,7 +11,9 @@ import UIKit
 import WebKit
 
 
-class TerminalViewController: UIViewController, WKNavigationDelegate {
+class TerminalViewController: UIViewController {
+
+    weak var delegate: TerminalViewControllerDelegate?
 
     private var webView: WKWebView!
 
@@ -24,6 +26,7 @@ class TerminalViewController: UIViewController, WKNavigationDelegate {
         view.backgroundColor = .black
 
         webView = WKWebView(frame: view.bounds)
+        webView.isUserInteractionEnabled = false
         webView.isOpaque = false
         webView.navigationDelegate = self
         view.addSubview(webView)
@@ -56,6 +59,10 @@ terminal.fit()
         webView.loadHTMLString(htmlString, baseURL: URL(fileURLWithPath: xtermjsBundlePath))
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        becomeFirstResponder()
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
@@ -66,15 +73,11 @@ terminal.fit()
         return .lightContent
     }
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        webViewDidLoad = true
-        if !webViewQueueBeforeLoad.isEmpty {
-            write(data: webViewQueueBeforeLoad)
-            webViewQueueBeforeLoad = Data()
-        }
+    override var canBecomeFirstResponder: Bool {
+        return true
     }
 
-    func write(data: Data) {
+    func write(_ data: Data) {
         guard webViewDidLoad else {
             webViewQueueBeforeLoad.append(data)
             return
@@ -84,4 +87,41 @@ terminal.fit()
         let javascript = "terminal.write(window.atob('\(encoded)'));"
         webView.evaluateJavaScript(javascript, completionHandler: nil)
     }
+
+    func write(_ string: String) {
+        if let data = string.data(using: .utf8) {
+            write(data)
+        }
+    }
+}
+
+extension TerminalViewController: WKNavigationDelegate {
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        webViewDidLoad = true
+        if !webViewQueueBeforeLoad.isEmpty {
+            write(webViewQueueBeforeLoad)
+            webViewQueueBeforeLoad = Data()
+        }
+    }
+}
+
+extension TerminalViewController: UIKeyInput {
+
+    var hasText: Bool {
+        return true
+    }
+
+    func insertText(_ text: String) {
+        delegate?.terminalViewController(self, write: text)
+    }
+
+    func deleteBackward() {
+        delegate?.terminalViewController(self, write: "\u{7f}")
+    }
+}
+
+protocol TerminalViewControllerDelegate: AnyObject {
+
+    func terminalViewController(_ viewController: TerminalViewController, write text: String)
 }
