@@ -15,10 +15,14 @@ targets:
     platform: iOS
     info:
       path: Info.plist
+      properties:
+        UILaunchStoryboardName: Launch
+        UIStatusBarStyle: UIStatusBarStyleLightContent
     settings:
       SWIFT_OBJC_BRIDGING_HEADER: Sources/BridgingHeader.h
     sources:
       - Sources
+      - Launch.storyboard
     dependencies:
       - target: TinyEMU
       - target: Xterm.js
