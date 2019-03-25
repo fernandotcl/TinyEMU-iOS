@@ -15,6 +15,11 @@ class TerminalViewController: UIViewController {
 
     weak var delegate: TerminalViewControllerDelegate?
 
+    var autocapitalizationType = UITextAutocapitalizationType.none
+    var autocorrectionType = UITextAutocorrectionType.no
+    var keyboardAppearance = UIKeyboardAppearance.dark
+    var returnKeyType = UIReturnKeyType.default
+
     private var webView: WKWebView!
 
     private var webViewDidLoad = false
