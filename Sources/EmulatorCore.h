@@ -11,13 +11,24 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@protocol EmulatorCoreDelegate;
+
 
 @interface EmulatorCore: NSObject
 
 - (instancetype)initWithConfigPath:(NSString *)path NS_DESIGNATED_INITIALIZER;
 - (instancetype)init NS_UNAVAILABLE;
 
-- (void)run;
+@property (nonatomic, weak) id <EmulatorCoreDelegate> delegate;
+
+- (void)start;
+
+@end
+
+
+@protocol EmulatorCoreDelegate <NSObject>
+
+- (void)emulatorCore:(EmulatorCore *)core didReceiveOutput:(NSData *)data;
 
 @end
 

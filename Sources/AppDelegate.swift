@@ -11,11 +11,21 @@ import UIKit
 
 
 @UIApplicationMain
-class AppDelegate: NSObject, UIApplicationDelegate {
+class AppDelegate: NSObject, UIApplicationDelegate, EmulatorCoreDelegate {
+
+    private let emulatorCore: EmulatorCore
+
+    override init() {
+        emulatorCore = EmulatorCore(configPath: "/Users/fernando/Desktop/TinyEMU/temu.cfg")
+        super.init()
+    }
 
     func applicationDidFinishLaunching(_ application: UIApplication) {
+        emulatorCore.delegate = self
+        emulatorCore.start()
+    }
 
-        let emulatorCore = EmulatorCore(configPath: "/Users/fernando/Desktop/TinyEMU/temu.cfg")
-        emulatorCore.run()
+    func emulatorCore(_ core: EmulatorCore, didReceiveOutput data: Data) {
+        FileHandle.standardError.write(data)
     }
 }
