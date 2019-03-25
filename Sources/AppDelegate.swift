@@ -14,7 +14,7 @@ import UIKit
 class AppDelegate: NSObject, UIApplicationDelegate, EmulatorCoreDelegate {
 
     private var window: UIWindow?
-    private var rootViewController: TerminalViewController!
+    private var terminalViewController: TerminalViewController!
     private let emulatorCore: EmulatorCore
 
     override init() {
@@ -26,8 +26,8 @@ class AppDelegate: NSObject, UIApplicationDelegate, EmulatorCoreDelegate {
         let window = UIWindow(frame: UIScreen.main.bounds)
         self.window = window
 
-        rootViewController = TerminalViewController()
-        window.rootViewController = rootViewController
+        terminalViewController = TerminalViewController()
+        window.rootViewController = terminalViewController
         window.makeKeyAndVisible()
 
         emulatorCore.delegate = self
@@ -35,6 +35,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, EmulatorCoreDelegate {
     }
 
     func emulatorCore(_ core: EmulatorCore, didReceiveOutput data: Data) {
-        FileHandle.standardError.write(data)
+        terminalViewController.write(data: data)
     }
 }

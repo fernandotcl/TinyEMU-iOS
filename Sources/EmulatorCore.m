@@ -37,6 +37,7 @@ int temu_main(int argc, const char **argv);
 - (void)start
 {
     int fds[2];
+    int flags;
 
     // Replace stdin with a pipe
     if (pipe(fds) == -1) {
@@ -49,6 +50,13 @@ int temu_main(int argc, const char **argv);
     // Replace stdout with a pipe
     if (pipe(fds) == -1) {
         [NSException raise:NSInternalInconsistencyException format:@"pipe() failed"];
+    }
+    flags = fcntl(fds[0], F_GETFL);
+    if (flags == -1) {
+        [NSException raise:NSInternalInconsistencyException format:@"fcntl() failed"];
+    }
+    if (fcntl(fds[0], F_SETFL, flags | O_NONBLOCK) == -1) {
+        [NSException raise:NSInternalInconsistencyException format:@"fcntl() failed"];
     }
     if (dup2(fds[1], STDOUT_FILENO) != STDOUT_FILENO) {
         [NSException raise:NSInternalInconsistencyException format:@"dup2() failed"];
@@ -64,15 +72,15 @@ int temu_main(int argc, const char **argv);
         int descriptor = (int)dispatch_source_get_handle(weakSelf.outputSource);
         uint8_t buf[1024];
         for (;;) {
-            size_t len = read(descriptor, buf, sizeof(buf) - 1);
+            ssize_t len = read(descriptor, buf, sizeof(buf) - 1);
             if (len > 0) {
                 [self.delegate emulatorCore:self didReceiveOutput:[NSData dataWithBytes:buf length:len]];
             }
-            else if (len == 0) {
+            else if (len == 0 || (len == -1 && errno == EAGAIN)) {
                 break;
             }
             else {
-                [NSException raise:NSInternalInconsistencyException format:@"raed() failed"];
+                [NSException raise:NSInternalInconsistencyException format:@"read() failed"];
             }
         }
     });
