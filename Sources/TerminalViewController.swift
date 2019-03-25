@@ -25,6 +25,9 @@ class TerminalViewController: UIViewController {
 
         view.backgroundColor = .black
 
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(becomeFirstResponder))
+        view.addGestureRecognizer(tapGestureRecognizer)
+
         webView = WKWebView(frame: view.bounds)
         webView.isUserInteractionEnabled = false
         webView.isOpaque = false
