@@ -1,4 +1,5 @@
 name: TinyEMU-iOS
+
 options:
   bundleIdPrefix: com.fernandotcl
   deploymentTarget:
@@ -6,7 +7,9 @@ options:
   usesTabs: false
   identWidth: 4
   tabWidth: 4
+
 targets:
+
   TinyEMU-iOS:
     type: application
     platform: iOS
@@ -18,6 +21,8 @@ targets:
       - Sources
     dependencies:
       - target: TinyEMU
+      - target: Xterm.js
+
   TinyEMU:
     productName: libTinyEMU
     type: library.static
@@ -41,3 +46,20 @@ targets:
                 mv libtemu.a "${BUILT_PRODUCTS_DIR}/libTinyEMU.a"
                 make clean
     requiresObjCLinking: true
+
+  Xterm.js:
+    productName: Xterm.js
+    type: bundle
+    platform: iOS
+    info:
+      path: Xterm.js-Info.plist
+    postCompileScripts:
+      - inputFiles:
+        - $(SRCROOT)/package-lock.json
+        outputFiles:
+        - $(BUILD_PRODUCTS_DIR)/Xterm.js.bundle
+        script: |
+                set -e
+                npm install xterm
+                mkdir -p "${BUILT_PRODUCTS_DIR}"/Xterm.js.bundle
+                cp node_modules/xterm/dist/xterm.{js,css} "${BUILT_PRODUCTS_DIR}/Xterm.js.bundle"

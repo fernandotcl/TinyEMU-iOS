@@ -1,6 +1,8 @@
 # Build products
 *.xcodeproj
 Info.plist
+Xterm.js-Info.plist
+node_modules
 
 # macOS-specific
 .DS_Store

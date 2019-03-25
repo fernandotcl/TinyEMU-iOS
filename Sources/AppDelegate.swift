@@ -13,6 +13,8 @@ import UIKit
 @UIApplicationMain
 class AppDelegate: NSObject, UIApplicationDelegate, EmulatorCoreDelegate {
 
+    private var window: UIWindow?
+    private var rootViewController: TerminalViewController!
     private let emulatorCore: EmulatorCore
 
     override init() {
@@ -21,6 +23,13 @@ class AppDelegate: NSObject, UIApplicationDelegate, EmulatorCoreDelegate {
     }
 
     func applicationDidFinishLaunching(_ application: UIApplication) {
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        self.window = window
+
+        rootViewController = TerminalViewController()
+        window.rootViewController = rootViewController
+        window.makeKeyAndVisible()
+
         emulatorCore.delegate = self
         emulatorCore.start()
     }
