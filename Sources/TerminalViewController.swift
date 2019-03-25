@@ -49,9 +49,12 @@ class TerminalViewController: UIViewController {
   </body>
   <script>
 Terminal.applyAddon(fit);
-var terminal = new Terminal();
+var terminal = new Terminal({
+    rendererType: 'dom',
+    fontFamily: 'monaco',
+});
 terminal.open(document.getElementById('terminal'));
-terminal.fit()
+terminal.fit();
   </script>
 </html>
 """
