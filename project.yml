@@ -8,6 +8,9 @@ options:
   identWidth: 4
   tabWidth: 4
 
+settings:
+  DEVELOPMENT_TEAM: LF9WRPC84S
+
 targets:
 
   TinyEMU-iOS:
