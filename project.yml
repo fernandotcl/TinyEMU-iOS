@@ -41,7 +41,7 @@ targets:
                 set -e
                 cd "${SRCROOT}"/Vendors/TinyEMU
                 make clean
-                if test "x${PLATFORM_NAME}" = iphoneos; then
+                if test "x${PLATFORM_NAME}" = xiphoneos; then
                   make CONFIG_IOS=y CONFIG_FS_NET= CONFIG_SDL= CONFIG_X86EMU=
                 else
                   make CONFIG_IOS_SIMULATOR=y CONFIG_FS_NET= CONFIG_SDL= CONFIG_X86EMU=
