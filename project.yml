@@ -3,7 +3,7 @@ name: TinyEMU-iOS
 options:
   bundleIdPrefix: com.fernandotcl
   deploymentTarget:
-    - iOS: 11.0
+    iOS: 11.0
   usesTabs: false
   identWidth: 4
   tabWidth: 4
