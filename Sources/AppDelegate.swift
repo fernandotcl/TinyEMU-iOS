@@ -13,7 +13,7 @@ import UIKit
 @UIApplicationMain
 class AppDelegate: NSObject {
 
-    private var window: UIWindow?
+    var window: UIWindow?
     private var terminalViewController: TerminalViewController!
     private let emulatorCore: EmulatorCore
 

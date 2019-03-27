@@ -10,6 +10,7 @@ options:
 
 settings:
   DEVELOPMENT_TEAM: LF9WRPC84S
+  SWIFT_VERSION: 5.0
 
 targets:
 
