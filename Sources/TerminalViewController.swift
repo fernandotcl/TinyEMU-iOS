@@ -101,6 +101,15 @@ terminal.open(document.getElementById('terminal'));
         becomeFirstResponder()
     }
 
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
+}
+
+// MARK: - Layout
+
+extension TerminalViewController {
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
@@ -144,10 +153,6 @@ terminal.open(document.getElementById('terminal'));
                 view.setNeedsLayout()
             }
         }
-    }
-
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
     }
 }
 
@@ -212,7 +217,7 @@ extension TerminalViewController {
         return true
     }
 
-    fileprivate func syncFirstResponderStatusToTerminal() {
+    private func syncFirstResponderStatusToTerminal() {
         if isFirstResponder {
             webView.evaluateJavaScript("terminal.emit('focus');", completionHandler: nil)
         } else {
