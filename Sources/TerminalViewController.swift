@@ -248,43 +248,62 @@ extension TerminalViewController: UIKeyInput {
 extension TerminalViewController {
 
     override var keyCommands: [UIKeyCommand] {
-        return [
+        var keyCommands = [
             UIKeyCommand(input: UIKeyCommand.inputUpArrow,
                          modifierFlags: [],
-                         action: #selector(keyCommandArrowUp)),
+                         action: #selector(handleKeyCommandArrowUp)),
             UIKeyCommand(input: UIKeyCommand.inputDownArrow,
                          modifierFlags: [],
-                         action: #selector(keyCommandArrowDown)),
+                         action: #selector(handleKeyCommandArrowDown)),
             UIKeyCommand(input: UIKeyCommand.inputLeftArrow,
                          modifierFlags: [],
-                         action: #selector(keyCommandArrowLeft)),
+                         action: #selector(handleKeyCommandArrowLeft)),
             UIKeyCommand(input: UIKeyCommand.inputRightArrow,
                          modifierFlags: [],
-                         action: #selector(keyCommandArrowRight)),
+                         action: #selector(handleKeyCommandArrowRight)),
             UIKeyCommand(input: UIKeyCommand.inputEscape,
                          modifierFlags: [],
-                         action: #selector(keyCommandEscape))
+                         action: #selector(handleKeyCommandEscape)),
+            UIKeyCommand(input: "K",
+                         modifierFlags: [.command],
+                         action: #selector(handleKeyCommandClear))
         ]
+        keyCommands += "ABCDEFGHIJKLMNOPQRSTUVWYXZ0123456789".map {
+            UIKeyCommand(input: String($0),
+                         modifierFlags: [.control],
+                         action: #selector(handleKeyCommandControlModifier(_:)))
+        }
+        return keyCommands
     }
 
-    @objc private func keyCommandArrowUp() {
+    @objc private func handleKeyCommandArrowUp() {
         delegate?.terminalViewController(self, write: "\u{1b}[A")
     }
 
-    @objc private func keyCommandArrowDown() {
+    @objc private func handleKeyCommandArrowDown() {
         delegate?.terminalViewController(self, write: "\u{1b}[B")
     }
 
-    @objc private func keyCommandArrowLeft() {
+    @objc private func handleKeyCommandArrowLeft() {
         delegate?.terminalViewController(self, write: "\u{1b}[D")
     }
 
-    @objc private func keyCommandArrowRight() {
+    @objc private func handleKeyCommandArrowRight() {
         delegate?.terminalViewController(self, write: "\u{1b}[C")
     }
 
-    @objc private func keyCommandEscape() {
+    @objc private func handleKeyCommandEscape() {
         delegate?.terminalViewController(self, write: "\u{1b}")
+    }
+
+    @objc private func handleKeyCommandClear() {
+        webView.evaluateJavaScript("terminal.clear();", completionHandler: nil)
+    }
+
+    @objc private func handleKeyCommandControlModifier(_ keyCommand: UIKeyCommand) {
+        let character = keyCommand.input!.uppercased().first!.asciiValue!
+        let sequence = String(UnicodeScalar(character ^ 0x40))
+        delegate?.terminalViewController(self, write: sequence)
     }
 }
 
