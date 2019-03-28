@@ -15,6 +15,16 @@
 int temu_main(int argc, const char **argv);
 
 
+static NSInteger consoleColumns = 80;
+static NSInteger consoleRows = 25;
+
+void console_get_size(void *opaque, int *pw, int *ph)
+{
+    *pw = (int)consoleColumns;
+    *ph = (int)consoleRows;
+}
+
+
 @interface EmulatorCore ()
 
 @property (nonatomic, copy) NSString *configPath;
@@ -104,6 +114,16 @@ int temu_main(int argc, const char **argv);
     if (len != data.length) {
         [NSException raise:NSInternalInconsistencyException format:@"write() failed"];
     }
+}
+
+- (void)resizeWithColumns:(NSInteger)columns rows:(NSInteger)rows
+{
+    if (consoleColumns == columns && consoleRows == rows) return;
+
+    consoleColumns = columns;
+    consoleRows = rows;
+
+    kill(getpid(), SIGWINCH);
 }
 
 @end

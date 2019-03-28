@@ -48,7 +48,14 @@ extension AppDelegate: EmulatorCoreDelegate {
 
 extension AppDelegate: TerminalViewControllerDelegate {
 
-    func terminalViewController(_ viewController: TerminalViewController, write text: String) {
+    func terminalViewController(_ viewController: TerminalViewController,
+                                resizeWithColumns columns: Int,
+                                rows: Int) {
+        emulatorCore.resize(withColumns: columns, rows: rows)
+    }
+
+    func terminalViewController(_ viewController: TerminalViewController,
+                                write text: String) {
         if let data = text.data(using: .utf8) {
             emulatorCore.write(data)
         }

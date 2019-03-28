@@ -77,11 +77,13 @@ body { margin: 0; }
   <script>
 
 function refit(width, height) {
-    var cellWidth = terminal._core.renderer.dimensions.actualCellWidth
-    var cellHeight = terminal._core.renderer.dimensions.actualCellHeight
-    terminal.resize(Math.floor(width / cellWidth),
-                    Math.floor(height / cellHeight))
-    terminal.scrollToBottom()
+    var cellWidth = terminal._core.renderer.dimensions.actualCellWidth;
+    var cellHeight = terminal._core.renderer.dimensions.actualCellHeight;
+    var columns = Math.floor(width / cellWidth);
+    var rows = Math.floor(height / cellHeight);
+    terminal.resize(columns, rows);
+    terminal.scrollToBottom();
+    return { columns: columns, rows: rows };
 }
 
 var terminal = new Terminal({
@@ -141,7 +143,16 @@ extension TerminalViewController {
     private func refitTerminal() {
         let size = webView.frame.size
         let javascript = "refit(\(size.width), \(size.height));"
-        webView.evaluateJavaScript(javascript, completionHandler: nil)
+        webView.evaluateJavaScript(javascript) { [weak self] object, error in
+            if let self = self,
+                let dict = object as? Dictionary<AnyHashable, Any>,
+                let columns = dict["columns"] as? Int,
+                let rows = dict["rows"] as? Int {
+                self.delegate?.terminalViewController(self,
+                                                      resizeWithColumns: columns,
+                                                      rows: rows)
+            }
+        }
     }
 
     @objc private func keyboardWillChangeFrame(_ notification: Notification) {
@@ -311,5 +322,10 @@ extension TerminalViewController {
 
 protocol TerminalViewControllerDelegate: AnyObject {
 
-    func terminalViewController(_ viewController: TerminalViewController, write text: String)
+    func terminalViewController(_ viewController: TerminalViewController,
+                                resizeWithColumns columns: Int,
+                                rows: Int)
+
+    func terminalViewController(_ viewController: TerminalViewController,
+        write text: String)
 }

@@ -25,6 +25,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)writeData:(NSData *)data;
 
+- (void)resizeWithColumns:(NSInteger)columns rows:(NSInteger)rows;
+
 @end
 
 
