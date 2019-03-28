@@ -22,6 +22,18 @@ targets:
       properties:
         UILaunchStoryboardName: Launch
         UIStatusBarStyle: UIStatusBarStyleLightContent
+        UISupportedInterfaceOrientations: [
+          UIInterfaceOrientationPortrait,
+          UIInterfaceOrientationLandscapeLeft,
+          UIInterfaceOrientationLandscapeRight,
+        ]
+        UISupportedInterfaceOrientations~ipad: [
+          UIInterfaceOrientationPortrait,
+          UIInterfaceOrientationLandscapeLeft,
+          UIInterfaceOrientationLandscapeRight,
+          UIInterfaceOrientationPortraitUpsideDown
+        ]
+
     settings:
       SWIFT_OBJC_BRIDGING_HEADER: Sources/BridgingHeader.h
     sources:
