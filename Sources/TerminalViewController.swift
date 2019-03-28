@@ -149,13 +149,28 @@ terminal.open(document.getElementById('terminal'));
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
+}
 
-    override var canBecomeFirstResponder: Bool {
-        return true
+// MARK: - Navigation delegate
+
+extension TerminalViewController: WKNavigationDelegate {
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        refitTerminal()
+
+        webViewDidLoad = true
+        if !webViewQueueBeforeLoad.isEmpty {
+            write(webViewQueueBeforeLoad)
+            webViewQueueBeforeLoad = Data()
+        }
+
+        syncFirstResponderStatusToTerminal()
     }
 }
 
-extension TerminalViewController: WKNavigationDelegate {
+// MARK: - Terminal output
+
+extension TerminalViewController {
 
     func write(_ data: Data) {
         guard webViewDidLoad else {
@@ -173,17 +188,40 @@ extension TerminalViewController: WKNavigationDelegate {
             write(data)
         }
     }
+}
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        refitTerminal()
+// MARK: - First responder management
 
-        webViewDidLoad = true
-        if !webViewQueueBeforeLoad.isEmpty {
-            write(webViewQueueBeforeLoad)
-            webViewQueueBeforeLoad = Data()
+extension TerminalViewController {
+
+    override var canBecomeFirstResponder: Bool {
+        return true
+    }
+
+    @discardableResult
+    override func becomeFirstResponder() -> Bool {
+        guard super.becomeFirstResponder() else { return false }
+        syncFirstResponderStatusToTerminal()
+        return true
+    }
+
+    @discardableResult
+    override func resignFirstResponder() -> Bool {
+        guard super.resignFirstResponder() else { return false }
+        syncFirstResponderStatusToTerminal()
+        return true
+    }
+
+    fileprivate func syncFirstResponderStatusToTerminal() {
+        if isFirstResponder {
+            webView.evaluateJavaScript("terminal.emit('focus');", completionHandler: nil)
+        } else {
+            webView.evaluateJavaScript("terminal.emit('blur');", completionHandler: nil)
         }
     }
 }
+
+// MARK: - UIKeyInput
 
 extension TerminalViewController: UIKeyInput {
 
@@ -199,6 +237,8 @@ extension TerminalViewController: UIKeyInput {
         delegate?.terminalViewController(self, write: "\u{7f}")
     }
 }
+
+// MARK: - Keyboard shortcuts
 
 extension TerminalViewController {
 
@@ -242,6 +282,8 @@ extension TerminalViewController {
         delegate?.terminalViewController(self, write: "\u{1b}")
     }
 }
+
+// MARK: - Delegate protocol
 
 protocol TerminalViewControllerDelegate: AnyObject {
 
