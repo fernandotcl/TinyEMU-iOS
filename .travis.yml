@@ -7,7 +7,7 @@ addons:
     - xcodegen
 
 before_install:
-  - xcodegen
+  - make
 
 script:
   - set -o pipefail && xcodebuild -project TinyEMU-iOS.xcodeproj -scheme TinyEMU-iOS -sdk iphonesimulator build | xcpretty
