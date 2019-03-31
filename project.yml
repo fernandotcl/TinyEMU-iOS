@@ -39,6 +39,7 @@ targets:
     sources:
       - Sources
       - Launch.storyboard
+      - Assets/Machine.bundle
     dependencies:
       - target: TinyEMU
       - target: Xterm.js

@@ -3,6 +3,8 @@
 Info.plist
 Xterm.js-Info.plist
 node_modules
+machine.tar.gz
+Assets/Machine.bundle
 
 # macOS-specific
 .DS_Store

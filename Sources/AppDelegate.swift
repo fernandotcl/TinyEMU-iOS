@@ -15,10 +15,18 @@ class AppDelegate: NSObject {
 
     var window: UIWindow?
     private var terminalViewController: TerminalViewController!
+    private let machineLoader: MachineLoader
     private let emulatorCore: EmulatorCore
 
     override init() {
-        emulatorCore = EmulatorCore(configPath: "/Users/fernando/Desktop/TinyEMU/temu.cfg")
+        let bundleURL = Bundle.main.url(forResource: "Machine",
+                                        withExtension: "bundle")!
+        machineLoader = MachineLoader()
+        try! machineLoader.load(Bundle(url: bundleURL)!)
+
+        emulatorCore = EmulatorCore(configPath:
+            machineLoader.configFileURL.path)
+
         super.init()
     }
 }
