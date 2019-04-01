@@ -27,6 +27,8 @@ class TerminalViewController: UIViewController {
 
     private var keyboardInset: CGFloat = 0
 
+    private var terminalInputAccessoryView: TerminalInputAccessoryView!
+
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
 
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -42,6 +44,9 @@ class TerminalViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        terminalInputAccessoryView = TerminalInputAccessoryView()
+        terminalInputAccessoryView.delegate = self
 
         view.backgroundColor = .black
 
@@ -101,6 +106,10 @@ terminal.open(document.getElementById('terminal'));
 
     override func viewWillAppear(_ animated: Bool) {
         becomeFirstResponder()
+    }
+
+    override var inputAccessoryView: UIView? {
+        return terminalInputAccessoryView
     }
 
     override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -176,7 +185,7 @@ extension TerminalViewController: WKNavigationDelegate {
 
         webViewDidLoad = true
         if !webViewQueueBeforeLoad.isEmpty {
-            write(webViewQueueBeforeLoad)
+            handleTerminalOutput(webViewQueueBeforeLoad)
             webViewQueueBeforeLoad = Data()
         }
 
@@ -184,11 +193,11 @@ extension TerminalViewController: WKNavigationDelegate {
     }
 }
 
-// MARK: - Terminal output
+// MARK: - Terminal I/O
 
 extension TerminalViewController {
 
-    func write(_ data: Data) {
+    func handleTerminalOutput(_ data: Data) {
         guard webViewDidLoad else {
             webViewQueueBeforeLoad.append(data)
             return
@@ -199,10 +208,33 @@ extension TerminalViewController {
         webView.evaluateJavaScript(javascript, completionHandler: nil)
     }
 
-    func write(_ string: String) {
+    func handleTerminalOutput(_ string: String) {
         if let data = string.data(using: .utf8) {
-            write(data)
+            handleTerminalOutput(data)
         }
+    }
+
+    private func handleTerminalInput(
+        _ input: String,
+        additionalModifiers: UIKeyModifierFlags = []) {
+
+        var sequence = input
+
+        let modifiers = terminalInputAccessoryView.enabledModifiers
+            .union(additionalModifiers)
+
+        if modifiers.contains(.control) {
+            if let character = sequence.uppercased().first?.asciiValue {
+                sequence = String(UnicodeScalar(character ^ 0x40))
+            }
+        }
+        if modifiers.contains(.alternate) {
+            sequence = "\u{1b}[" + sequence
+        }
+
+        delegate?.terminalViewController(self, write: sequence)
+
+        terminalInputAccessoryView.clearModifiers()
     }
 }
 
@@ -246,11 +278,11 @@ extension TerminalViewController: UIKeyInput {
     }
 
     func insertText(_ text: String) {
-        delegate?.terminalViewController(self, write: text)
+        handleTerminalInput(text)
     }
 
     func deleteBackward() {
-        delegate?.terminalViewController(self, write: "\u{7f}")
+        handleTerminalInput("\u{7f}")
     }
 }
 
@@ -280,41 +312,80 @@ extension TerminalViewController {
                          action: #selector(handleKeyCommandClear))
         ]
         keyCommands += "ABCDEFGHIJKLMNOPQRSTUVWYXZ0123456789".map {
-            UIKeyCommand(input: String($0),
-                         modifierFlags: [.control],
-                         action: #selector(handleKeyCommandControlModifier(_:)))
-        }
+            [UIKeyCommand(input: String($0),
+                          modifierFlags: .control,
+                          action: #selector(handleKeyCommandModifier(_:))),
+             UIKeyCommand(input: String($0),
+                          modifierFlags: .alternate,
+                          action: #selector(handleKeyCommandModifier(_:))),
+             UIKeyCommand(input: String($0),
+                          modifierFlags: [.control, .alternate],
+                          action: #selector(handleKeyCommandModifier(_:)))]
+        }.reduce([], +)
         return keyCommands
     }
 
     @objc private func handleKeyCommandArrowUp() {
-        delegate?.terminalViewController(self, write: "\u{1b}[A")
+        handleTerminalInput("\u{1b}[A")
     }
 
     @objc private func handleKeyCommandArrowDown() {
-        delegate?.terminalViewController(self, write: "\u{1b}[B")
+        handleTerminalInput("\u{1b}[B")
     }
 
     @objc private func handleKeyCommandArrowLeft() {
-        delegate?.terminalViewController(self, write: "\u{1b}[D")
+        handleTerminalInput("\u{1b}[D")
     }
 
     @objc private func handleKeyCommandArrowRight() {
-        delegate?.terminalViewController(self, write: "\u{1b}[C")
+        handleTerminalInput("\u{1b}[C")
     }
 
     @objc private func handleKeyCommandEscape() {
-        delegate?.terminalViewController(self, write: "\u{1b}")
+        handleTerminalInput("\u{1b}")
     }
 
     @objc private func handleKeyCommandClear() {
         webView.evaluateJavaScript("terminal.clear();", completionHandler: nil)
     }
 
-    @objc private func handleKeyCommandControlModifier(_ keyCommand: UIKeyCommand) {
-        let character = keyCommand.input!.uppercased().first!.asciiValue!
-        let sequence = String(UnicodeScalar(character ^ 0x40))
-        delegate?.terminalViewController(self, write: sequence)
+    @objc private func handleKeyCommandModifier(_ keyCommand: UIKeyCommand) {
+        handleTerminalInput(keyCommand.input!,
+                            additionalModifiers: keyCommand.modifierFlags)
+    }
+}
+
+// MARK: - Input accessory view delegate
+
+extension TerminalViewController: TerminalInputAccessoryViewDelegate {
+
+    func terminalInputAccessoryView(
+        _ view: TerminalInputAccessoryView,
+        didTapKey key: TerminalInputAccessoryView.Key) {
+
+        let sequence: String
+        switch key {
+        case .escape:
+            sequence = "\u{1b}"
+        case .tab:
+            sequence = "\t"
+        case .home:
+            sequence = "\u{01}"
+        case .end:
+            sequence = "\u{05}"
+        case .arrowLeft:
+            sequence = "\u{1b}[D"
+        case .arrowUp:
+            sequence = "\u{1b}[A"
+        case .arrowDown:
+            sequence = "\u{1b}[B"
+        case .arrowRight:
+            sequence = "\u{1b}[C"
+        default:
+            return
+        }
+
+        handleTerminalInput(sequence)
     }
 }
 

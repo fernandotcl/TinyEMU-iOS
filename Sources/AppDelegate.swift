@@ -50,7 +50,7 @@ extension AppDelegate: UIApplicationDelegate {
 extension AppDelegate: EmulatorCoreDelegate {
 
     func emulatorCore(_ core: EmulatorCore, didReceiveOutput data: Data) {
-        terminalViewController.write(data)
+        terminalViewController.handleTerminalOutput(data)
     }
 }
 
