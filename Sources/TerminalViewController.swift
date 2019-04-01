@@ -166,12 +166,20 @@ extension TerminalViewController {
 
     @objc private func keyboardWillChangeFrame(_ notification: Notification) {
         let frameKey = UIApplication.keyboardFrameEndUserInfoKey
-        if let frame = (notification.userInfo?[frameKey] as? NSValue)?.cgRectValue,
-            frame.height != keyboardInset {
-            keyboardInset = frame.height
-            if isViewLoaded {
-                view.setNeedsLayout()
-            }
+        guard let frame = (notification.userInfo?[frameKey] as? NSValue)?
+            .cgRectValue else { return }
+
+        let intersection = view.bounds.intersection(frame)
+        let inset: CGFloat
+        if intersection.isNull {
+            inset = 0
+        } else {
+            inset = intersection.height
+        }
+
+        if inset != keyboardInset {
+            keyboardInset = inset
+            view.setNeedsLayout()
         }
     }
 }
