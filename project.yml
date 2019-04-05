@@ -36,7 +36,7 @@ targets:
 
     settings:
       SWIFT_OBJC_BRIDGING_HEADER: Sources/BridgingHeader.h
-      OTHER_LDFLAGS: -lz
+      OTHER_LDFLAGS: -lresolv -lz
     sources:
       - Sources
       - Launch.storyboard
