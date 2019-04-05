@@ -50,7 +50,7 @@ extension AppDelegate: UIApplicationDelegate {
 extension AppDelegate: EmulatorCoreDelegate {
 
     func emulatorCore(_ core: EmulatorCore, didReceiveOutput data: Data) {
-        terminalViewController.handleTerminalOutput(data)
+        terminalViewController.receiveTerminalOutput(data)
     }
 }
 
@@ -63,9 +63,7 @@ extension AppDelegate: TerminalViewControllerDelegate {
     }
 
     func terminalViewController(_ viewController: TerminalViewController,
-                                write text: String) {
-        if let data = text.data(using: .utf8) {
-            emulatorCore.write(data)
-        }
+                                send data: Data) {
+        emulatorCore.sendInput(data)
     }
 }

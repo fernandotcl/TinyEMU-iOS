@@ -108,7 +108,7 @@ void console_get_size(void *opaque, int *pw, int *ph)
     });
 }
 
-- (void)writeData:(NSData *)data
+- (void)sendInput:(NSData *)data
 {
     ssize_t len = write(self.inputDescriptor, data.bytes, data.length);
     if (len != data.length) {

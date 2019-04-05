@@ -195,7 +195,7 @@ extension TerminalViewController: WKNavigationDelegate {
 
         webViewDidLoad = true
         if !webViewQueueBeforeLoad.isEmpty {
-            handleTerminalOutput(webViewQueueBeforeLoad)
+            receiveTerminalOutput(webViewQueueBeforeLoad)
             webViewQueueBeforeLoad = Data()
         }
 
@@ -207,7 +207,7 @@ extension TerminalViewController: WKNavigationDelegate {
 
 extension TerminalViewController {
 
-    func handleTerminalOutput(_ data: Data) {
+    func receiveTerminalOutput(_ data: Data) {
         guard webViewDidLoad else {
             webViewQueueBeforeLoad.append(data)
             return
@@ -218,33 +218,41 @@ extension TerminalViewController {
         webView.evaluateJavaScript(javascript, completionHandler: nil)
     }
 
-    func handleTerminalOutput(_ string: String) {
+    func receiveTerminalOutput(_ string: String) {
         if let data = string.data(using: .utf8) {
-            handleTerminalOutput(data)
+            receiveTerminalOutput(data)
         }
     }
 
-    private func handleTerminalInput(
-        _ input: String,
+    private func sendTerminalText(_ text: String) {
+        if let data = text.data(using: .utf8) {
+            delegate?.terminalViewController(self, send: data)
+        }
+    }
+
+    private func sendTerminalSequence(
+        _ sequence: String,
         additionalModifiers: UIKeyModifierFlags = []) {
 
-        var sequence = input
+        guard let data = sequence.data(using: .ascii), !data.isEmpty else { return }
 
         let modifiers = terminalInputAccessoryView.enabledModifiers
             .union(additionalModifiers)
 
-        if modifiers.contains(.control) {
-            if let character = sequence.uppercased().first?.asciiValue {
-                sequence = String(UnicodeScalar(character ^ 0x40))
-            }
-        }
         if modifiers.contains(.alternate) {
-            sequence = "\u{1b}[" + sequence
+            delegate?.terminalViewController(self, send: Data([0x1b, 0x5b]))
         }
 
-        delegate?.terminalViewController(self, write: sequence)
-
-        terminalInputAccessoryView.clearModifiers()
+        if modifiers.contains(.control) {
+            var firstChar = data.first!
+            if firstChar >= 97 && firstChar <= 122 {
+                firstChar -= 32
+            }
+            delegate?.terminalViewController(self, send: Data([firstChar ^ 0x40]))
+        }
+        else {
+            delegate?.terminalViewController(self, send: data)
+        }
     }
 }
 
@@ -288,11 +296,15 @@ extension TerminalViewController: UIKeyInput {
     }
 
     func insertText(_ text: String) {
-        handleTerminalInput(text)
+        if let firstChar = text.first, firstChar.isASCII, text.count == 1 {
+            sendTerminalSequence(text)
+        } else {
+            sendTerminalText(text)
+        }
     }
 
     func deleteBackward() {
-        handleTerminalInput("\u{7f}")
+        sendTerminalSequence("\u{7f}")
     }
 }
 
@@ -300,68 +312,59 @@ extension TerminalViewController: UIKeyInput {
 
 extension TerminalViewController {
 
-    override var keyCommands: [UIKeyCommand] {
-        var keyCommands = [
-            UIKeyCommand(input: UIKeyCommand.inputUpArrow,
-                         modifierFlags: [],
-                         action: #selector(handleKeyCommandArrowUp)),
-            UIKeyCommand(input: UIKeyCommand.inputDownArrow,
-                         modifierFlags: [],
-                         action: #selector(handleKeyCommandArrowDown)),
-            UIKeyCommand(input: UIKeyCommand.inputLeftArrow,
-                         modifierFlags: [],
-                         action: #selector(handleKeyCommandArrowLeft)),
-            UIKeyCommand(input: UIKeyCommand.inputRightArrow,
-                         modifierFlags: [],
-                         action: #selector(handleKeyCommandArrowRight)),
-            UIKeyCommand(input: UIKeyCommand.inputEscape,
-                         modifierFlags: [],
-                         action: #selector(handleKeyCommandEscape)),
-            UIKeyCommand(input: "K",
-                         modifierFlags: [.command],
-                         action: #selector(handleKeyCommandClear))
+    private var sequenceCommands: [(UIKeyModifierFlags, String, String)] {
+        return [
+            ([], UIKeyCommand.inputUpArrow, "\u{1b}[A"),
+            ([], UIKeyCommand.inputDownArrow, "\u{1b}[B"),
+            ([], UIKeyCommand.inputLeftArrow, "\u{1b}[D"),
+            ([], UIKeyCommand.inputRightArrow, "\u{1b}[C"),
+            ([], UIKeyCommand.inputEscape, "\u{1b}"),
+            ([.alternate], UIKeyCommand.inputLeftArrow, "\u{1b}b"),
+            ([.alternate], UIKeyCommand.inputRightArrow, "\u{1b}f"),
         ]
+    }
+
+    override var keyCommands: [UIKeyCommand] {
+        var keyCommands = sequenceCommands.map {
+            UIKeyCommand(input: $0.1,
+                         modifierFlags: $0.0,
+                         action: #selector(handleSequenceCommand(_:)))
+        }
+
         keyCommands += "ABCDEFGHIJKLMNOPQRSTUVWYXZ0123456789".map {
             [UIKeyCommand(input: String($0),
                           modifierFlags: .control,
-                          action: #selector(handleKeyCommandModifier(_:))),
+                          action: #selector(handleModifierCommand(_:))),
              UIKeyCommand(input: String($0),
                           modifierFlags: .alternate,
-                          action: #selector(handleKeyCommandModifier(_:))),
+                          action: #selector(handleModifierCommand(_:))),
              UIKeyCommand(input: String($0),
                           modifierFlags: [.control, .alternate],
-                          action: #selector(handleKeyCommandModifier(_:)))]
-        }.reduce([], +)
+                          action: #selector(handleModifierCommand(_:)))]
+            }.reduce([], +)
+
+        keyCommands.append(UIKeyCommand(input: "K",
+                                        modifierFlags: [.command],
+                                        action: #selector(handleClearCommand)))
+
         return keyCommands
     }
 
-    @objc private func handleKeyCommandArrowUp() {
-        handleTerminalInput("\u{1b}[A")
+    @objc private func handleSequenceCommand(_ keyCommand: UIKeyCommand) {
+        if let sequence = sequenceCommands.first(where: {
+            $0.0 == keyCommand.modifierFlags && $0.1 == keyCommand.input
+        }) {
+            sendTerminalSequence(sequence.2)
+        }
     }
 
-    @objc private func handleKeyCommandArrowDown() {
-        handleTerminalInput("\u{1b}[B")
-    }
-
-    @objc private func handleKeyCommandArrowLeft() {
-        handleTerminalInput("\u{1b}[D")
-    }
-
-    @objc private func handleKeyCommandArrowRight() {
-        handleTerminalInput("\u{1b}[C")
-    }
-
-    @objc private func handleKeyCommandEscape() {
-        handleTerminalInput("\u{1b}")
-    }
-
-    @objc private func handleKeyCommandClear() {
-        webView.evaluateJavaScript("terminal.clear();", completionHandler: nil)
-    }
-
-    @objc private func handleKeyCommandModifier(_ keyCommand: UIKeyCommand) {
-        handleTerminalInput(keyCommand.input!,
+    @objc private func handleModifierCommand(_ keyCommand: UIKeyCommand) {
+        sendTerminalSequence(keyCommand.input!,
                             additionalModifiers: keyCommand.modifierFlags)
+    }
+
+    @objc private func handleClearCommand() {
+        webView.evaluateJavaScript("terminal.clear();", completionHandler: nil)
     }
 }
 
@@ -377,7 +380,7 @@ extension TerminalViewController {
         _ = provider.loadObject(ofClass: String.self) { [weak self] string, error in
             if let string = string {
                 DispatchQueue.main.async { [weak self] in
-                    self?.handleTerminalInput(string)
+                    self?.sendTerminalText(string)
                 }
             }
         }
@@ -399,9 +402,9 @@ extension TerminalViewController: TerminalInputAccessoryViewDelegate {
         case .tab:
             sequence = "\t"
         case .home:
-            sequence = "\u{01}"
+            sequence = "\u{1b}[H"
         case .end:
-            sequence = "\u{05}"
+            sequence = "\u{1b}[F"
         case .arrowLeft:
             sequence = "\u{1b}[D"
         case .arrowUp:
@@ -414,7 +417,7 @@ extension TerminalViewController: TerminalInputAccessoryViewDelegate {
             return
         }
 
-        handleTerminalInput(sequence)
+        sendTerminalSequence(sequence)
     }
 }
 
@@ -426,6 +429,7 @@ protocol TerminalViewControllerDelegate: AnyObject {
                                 resizeWithColumns columns: Int,
                                 rows: Int)
 
-    func terminalViewController(_ viewController: TerminalViewController,
-        write text: String)
+    func terminalViewController(
+        _ viewController: TerminalViewController,
+        send data: Data)
 }
