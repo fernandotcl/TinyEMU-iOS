@@ -54,6 +54,8 @@ class TerminalViewController: UIViewController {
             UITapGestureRecognizer(target: self,
                                    action: #selector(becomeFirstResponder)))
 
+        pasteConfiguration = UIPasteConfiguration(forAccepting: String.self)
+
         webView = WKWebView(frame: view.bounds)
         webView.isUserInteractionEnabled = false
         webView.isOpaque = false
@@ -360,6 +362,25 @@ extension TerminalViewController {
     @objc private func handleKeyCommandModifier(_ keyCommand: UIKeyCommand) {
         handleTerminalInput(keyCommand.input!,
                             additionalModifiers: keyCommand.modifierFlags)
+    }
+}
+
+// MARK: - UIPasteConfigurationSupporting
+
+extension TerminalViewController {
+
+    override func paste(itemProviders: [NSItemProvider]) {
+        guard let provider = itemProviders.first(where: {
+            $0.canLoadObject(ofClass: String.self)
+        }) else { return }
+
+        _ = provider.loadObject(ofClass: String.self) { [weak self] string, error in
+            if let string = string {
+                DispatchQueue.main.async { [weak self] in
+                    self?.handleTerminalInput(string)
+                }
+            }
+        }
     }
 }
 
