@@ -35,6 +35,3 @@ Downloads/root.img.bz2:
 	@echo '3cddbcf608aa2393b82a6769623713305e2aa29cc271bb79b2ecfd163f4575fa  Downloads/root.img.bz2.tmp' >$@.tmp.sha256
 	shasum -a 256 -c $@.tmp.sha256
 	mv $@.tmp $@
-
-clean:
-	rm -rf TinyEMU-iOS.xcodeproj Assets/Machine.bundle Downloads
