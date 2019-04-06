@@ -33,6 +33,8 @@ targets:
           UIInterfaceOrientationLandscapeRight,
           UIInterfaceOrientationPortraitUpsideDown
         ]
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
 
     settings:
       SWIFT_OBJC_BRIDGING_HEADER: Sources/BridgingHeader.h

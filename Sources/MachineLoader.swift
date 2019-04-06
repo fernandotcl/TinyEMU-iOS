@@ -68,6 +68,15 @@ class MachineLoader {
         if let rootDrive = description.rootDrive {
             config += "    drive0: { file: \"\(bundle.bundlePath)/\(rootDrive)\" },\n"
         }
+        if let url = FileManager.default
+            .urls(for: .documentDirectory, in: .userDomainMask).first {
+            config += """
+    fs0: {
+        file: "\(url.path)",
+        tag: "/dev/hostfs",
+    },
+"""
+        }
         config += """
     eth0: { driver: "user" },
 }
