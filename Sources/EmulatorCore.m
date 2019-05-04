@@ -85,15 +85,13 @@ void console_get_size(void *opaque, int *pw, int *ph)
         uint8_t buf[1024];
         for (;;) {
             ssize_t len = read(descriptor, buf, sizeof(buf) - 1);
-            if (len > 0) {
-                [self.delegate emulatorCore:self didReceiveOutput:[NSData dataWithBytes:buf length:len]];
-            }
-            else if (len == 0 || (len == -1 && errno == EAGAIN)) {
-                break;
-            }
-            else {
+            if (len == 0) break;
+            if (len < 0) {
+                if (errno == EAGAIN) break;
+                if (errno == EINTR) continue;
                 [NSException raise:NSInternalInconsistencyException format:@"read() failed"];
             }
+            [self.delegate emulatorCore:self didReceiveOutput:[NSData dataWithBytes:buf length:len]];
         }
     });
     dispatch_resume(self.outputSource);
@@ -110,10 +108,16 @@ void console_get_size(void *opaque, int *pw, int *ph)
 
 - (void)sendInput:(NSData *)data
 {
-    ssize_t len = write(self.inputDescriptor, data.bytes, data.length);
-    if (len != data.length) {
-        [NSException raise:NSInternalInconsistencyException format:@"write() failed"];
-    }
+    uintptr_t total = 0;
+    do {
+        ssize_t len = write(self.inputDescriptor, &data.bytes[total], data.length - total);
+        if (len < 0) {
+            if (errno == EAGAIN) break;
+            if (errno == EINTR) continue;
+            [NSException raise:NSInternalInconsistencyException format:@"write() failed"];
+        }
+        total += len;
+    } while (data.length > total);
 }
 
 - (void)resizeWithColumns:(NSInteger)columns rows:(NSInteger)rows
