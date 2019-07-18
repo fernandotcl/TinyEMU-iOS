@@ -84,7 +84,7 @@ targets:
         - $(BUILD_PRODUCTS_DIR)/Xterm.js.bundle
         script: |
                 set -e
-                npm install xterm
+                npm install xterm@3.14.5
                 mkdir -p "${BUILT_PRODUCTS_DIR}"/Xterm.js.bundle
                 cp node_modules/xterm/dist/xterm.{js,css} \
                   "${BUILT_PRODUCTS_DIR}/Xterm.js.bundle"

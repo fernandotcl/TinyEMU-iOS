@@ -3,6 +3,7 @@
 Info.plist
 Xterm.js-Info.plist
 node_modules
+package-lock.json
 Downloads
 Assets/Machine.bundle
 
