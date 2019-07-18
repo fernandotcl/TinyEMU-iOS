@@ -84,8 +84,8 @@ body { margin: 0; }
   <script>
 
 function refit(width, height) {
-    var cellWidth = terminal._core.renderer.dimensions.actualCellWidth;
-    var cellHeight = terminal._core.renderer.dimensions.actualCellHeight;
+    var cellWidth = terminal._core._renderCoordinator.dimensions.actualCellWidth;
+    var cellHeight = terminal._core._renderCoordinator.dimensions.actualCellHeight;
     var columns = Math.floor(width / cellWidth);
     var rows = Math.floor(height / cellHeight);
     terminal.resize(columns, rows);
