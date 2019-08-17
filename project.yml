@@ -21,7 +21,6 @@ targets:
       path: Info.plist
       properties:
         UILaunchStoryboardName: Launch
-        UIStatusBarStyle: UIStatusBarStyleLightContent
         UISupportedInterfaceOrientations: [
           UIInterfaceOrientationPortrait,
           UIInterfaceOrientationLandscapeLeft,

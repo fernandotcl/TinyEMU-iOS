@@ -54,9 +54,9 @@ class TerminalInputAccessoryView: UIView {
         buttons = keyDescriptors.map {
             let button = KeyButton(type: .custom)
             button.setTitle($0.buttonTitle, for: [])
-            button.setTitleColor(UIColor(white: 1, alpha: 0.7), for: [])
-            button.normalBackgroundColor = UIColor(white: 0.15, alpha: 1)
-            button.highlightedBackgroundColor = UIColor(white: 0.5, alpha: 1)
+            button.setTitleColor(.systemGray, for: [])
+            button.normalBackgroundColor = .systemGray5
+            button.highlightedBackgroundColor = .systemGray4
             return button
         }
 
@@ -64,7 +64,7 @@ class TerminalInputAccessoryView: UIView {
         superFrame.size.height = 44
         super.init(frame: superFrame)
 
-        backgroundColor = UIColor(white: 0.15, alpha: 1)
+        backgroundColor = .systemGray5
 
         for button in buttons {
             button.addTarget(self,

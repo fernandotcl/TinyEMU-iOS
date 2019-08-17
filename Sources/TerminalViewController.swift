@@ -17,7 +17,7 @@ class TerminalViewController: UIViewController {
 
     var autocapitalizationType = UITextAutocapitalizationType.none
     var autocorrectionType = UITextAutocorrectionType.no
-    var keyboardAppearance = UIKeyboardAppearance.dark
+    var keyboardAppearance = UIKeyboardAppearance.default
     var returnKeyType = UIReturnKeyType.default
 
     private var webView: WKWebView!
@@ -48,7 +48,7 @@ class TerminalViewController: UIViewController {
         terminalInputAccessoryView = TerminalInputAccessoryView()
         terminalInputAccessoryView.delegate = self
 
-        view.backgroundColor = .black
+        view.backgroundColor = .systemBackground
 
         view.addGestureRecognizer(
             UITapGestureRecognizer(target: self,
@@ -97,6 +97,7 @@ var terminal = new Terminal({
     rendererType: 'dom',
     fontFamily: 'monaco'
 });
+terminal.setOption('theme', \(terminalTheme));
 terminal.open(document.getElementById('terminal'));
 
   </script>
@@ -106,7 +107,22 @@ terminal.open(document.getElementById('terminal'));
         webView.loadHTMLString(htmlString, baseURL: URL(fileURLWithPath: xtermjsBundlePath))
     }
 
+    private var terminalTheme: String {
+        let backgroundColor = UIColor.systemBackground
+        let foregroundColor = UIColor.label
+
+        return """
+{
+    background: '\(backgroundColor.hexRepresentation)',
+    foreground: '\(foregroundColor.hexRepresentation)',
+    cursor: '\(foregroundColor.hexRepresentation)'
+}
+"""
+    }
+
     override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
         becomeFirstResponder()
     }
 
@@ -115,7 +131,14 @@ terminal.open(document.getElementById('terminal'));
     }
 
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
+        return .default
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+
+        let javascript = "terminal.setOption('theme', \(terminalTheme));"
+        webView.evaluateJavaScript(javascript, completionHandler: nil)
     }
 }
 
@@ -432,4 +455,19 @@ protocol TerminalViewControllerDelegate: AnyObject {
     func terminalViewController(
         _ viewController: TerminalViewController,
         send data: Data)
+}
+
+// MARK: - Hex colors
+
+private extension UIColor {
+
+    var hexRepresentation: String {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 1
+        getRed(&r, green: &g, blue: &b, alpha: &a)
+
+        var components = [r, g, b]
+        if a < 1 { components.append(a) }
+
+        return "#" + components.map { String(format: "%02X", Int($0 * 255)) }.joined()
+    }
 }
