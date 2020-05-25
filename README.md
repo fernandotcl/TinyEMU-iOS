@@ -1,9 +1,10 @@
 # TinyEMU-iOS
 
-[![Build Status](https://travis-ci.com/fernandotcl/TinyEMU-iOS.svg?branch=master)](https://travis-ci.com/fernandotcl/TinyEMU-iOS)
+[![Build](https://github.com/fernandotcl/TinyEMU-iOS/workflows/Build/badge.svg)][GitHub Actions]
 
 This is an experimental iOS app that embeds [TinyEMU][tinyemu].
 
+[GitHub Actions]: https://github.com/fernandotcl/TinyEMU-iOS/actions?query=workflow%3ABuild
 [tinyemu]: https://github.com/fernandotcl/TinyEMU
 
 ## Usage
