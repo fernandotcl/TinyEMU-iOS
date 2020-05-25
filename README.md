@@ -2,20 +2,20 @@
 
 [![Build](https://github.com/fernandotcl/TinyEMU-iOS/workflows/Build/badge.svg)][GitHub Actions]
 
-This is an experimental iOS app that embeds [TinyEMU][tinyemu].
+This is an experimental iOS app that embeds [TinyEMU][].
 
 [GitHub Actions]: https://github.com/fernandotcl/TinyEMU-iOS/actions?query=workflow%3ABuild
-[tinyemu]: https://github.com/fernandotcl/TinyEMU
+[TinyEMU]: https://github.com/fernandotcl/TinyEMU
 
 ## Usage
 
-This app is not available in the App Store or in TestFlight. To build it from source, make sure you have the latest version of Xcode installed. You'll also need [xcodegen][XcodeGen].
+This app is not available in the App Store or in TestFlight. To build it from source, make sure you have the latest version of Xcode installed. You'll also need [XcodeGen][].
 
-[xcodegen]: https://github.com/yonaskolb/XcodeGen
+[XcodeGen]: https://github.com/yonaskolb/XcodeGen
 
-You can run `make` to download and set up [Fabrice Bellard's disk images][diskimages] and create the project file. Then open `TinyEMU-iOS.xcodeproj`, change the code signing settings as needed and run.
+You can run `make` to download and set up [Fabrice Bellard's disk images][images] and create the project file. Then open `TinyEMU-iOS.xcodeproj`, change the code signing settings as needed and run.
 
-[diskimages]: https://bellard.org/tinyemu/
+[images]: https://bellard.org/tinyemu/
 
 ## Credits
 
