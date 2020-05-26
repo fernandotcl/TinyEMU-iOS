@@ -53,10 +53,22 @@ class TerminalInputAccessoryView: UIView {
     override init(frame: CGRect) {
         buttons = keyDescriptors.map {
             let button = KeyButton(type: .custom)
+
             button.setTitle($0.buttonTitle, for: [])
+
             button.setTitleColor(.systemGray, for: [])
             button.normalBackgroundColor = .systemGray5
             button.highlightedBackgroundColor = .systemGray4
+
+            button.isPointerInteractionEnabled = true
+            button.pointerStyleProvider = { button, effect, shape in
+                let preview = UITargetedPreview(view: button)
+                return UIPointerStyle(effect: .hover(
+                    preview, preferredTintMode: .overlay,
+                    prefersShadow: false, prefersScaledContent: false)
+                )
+            }
+
             return button
         }
 
