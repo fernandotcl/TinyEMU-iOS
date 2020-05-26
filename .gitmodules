@@ -1,3 +1,6 @@
 [submodule "TinyEMU"]
 	path = Vendors/TinyEMU
 	url = https://github.com/fernandotcl/TinyEMU
+[submodule "SwiftTerm"]
+	path = Vendors/SwiftTerm
+	url = https://github.com/migueldeicaza/SwiftTerm.git
