@@ -13,7 +13,7 @@ This app is not available in the App Store or in TestFlight. To build it from so
 
 [XcodeGen]: https://github.com/yonaskolb/XcodeGen
 
-You can run `make` to download and set up [Fabrice Bellard's disk images][images] and create the project file. Then open `TinyEMU-iOS.xcodeproj`, change the code signing settings as needed and run.
+Before building, make sure you have checked out the git submodules by running `git submodule update`. You can then run `make` to download and set up [Fabrice Bellard's disk images][images] and create the project file. Finally, open `TinyEMU-iOS.xcodeproj`, change the code signing settings as needed and run.
 
 [images]: https://bellard.org/tinyemu/
 
