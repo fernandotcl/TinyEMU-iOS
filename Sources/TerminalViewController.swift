@@ -69,22 +69,17 @@ extension TerminalViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
-        // Add a bit of margin if there's a 20pt status bar
-        let safeAreaInsets = view.safeAreaInsets
-        let topMargin = safeAreaInsets.top == 20 ? 25 : safeAreaInsets.top
-
-        // Take safe area insets, margin and keyboard inset into account
-        var frame = view.bounds
-        frame.origin.x += safeAreaInsets.left
-        frame.origin.y += topMargin
-        frame.size.width -= safeAreaInsets.left + safeAreaInsets.right
-        frame.size.height -= topMargin
-        frame.size.height -= max(keyboardInset, safeAreaInsets.bottom)
-        terminalView.frame = frame
+        var margins = view.safeAreaInsets
+        margins.top = max(margins.top, 25)
+        margins.left = max(margins.left, 5)
+        margins.bottom = max(max(margins.top, 5), keyboardInset)
+        margins.right = max(margins.right, 5)
+        terminalView.frame = view.bounds.inset(by: margins)
     }
 
     override func viewSafeAreaInsetsDidChange() {
         super.viewSafeAreaInsetsDidChange()
+
         view.setNeedsLayout()
     }
 
