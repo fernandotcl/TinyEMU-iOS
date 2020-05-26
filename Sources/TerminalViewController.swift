@@ -21,6 +21,8 @@ class TerminalViewController: UIViewController {
 
     private var keyboardInset: CGFloat = 0
 
+    private var tapGestureRecognizer: UIGestureRecognizer!
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -33,6 +35,11 @@ class TerminalViewController: UIViewController {
         terminalView.inputAccessoryView = terminalInputAccessoryView
 
         setupColors()
+
+        tapGestureRecognizer = UITapGestureRecognizer(
+            target: self, action: #selector(tapGestureRecognizerCallback))
+        tapGestureRecognizer.delegate = self
+        view.addGestureRecognizer(tapGestureRecognizer)
 
         NotificationCenter.default
             .addObserver(self,
@@ -186,6 +193,25 @@ extension TerminalViewController: TerminalInputAccessoryViewDelegate {
 
         sendTerminalSequence(sequence)
     }
+}
+
+// MARK: - Gestures
+
+extension TerminalViewController: UIGestureRecognizerDelegate {
+
+    @objc private func tapGestureRecognizerCallback() {
+        guard tapGestureRecognizer.state == .recognized else { return }
+        guard !terminalView.isFirstResponder else { return }
+        terminalView.becomeFirstResponder()
+    }
+
+    @objc func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        !terminalView.isFirstResponder
+    }
+
+    @objc func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool { true }
 }
 
 // MARK: - Delegate protocol
